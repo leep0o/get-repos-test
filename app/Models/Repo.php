@@ -13,7 +13,7 @@ class Repo extends Model
      * @var array
      */
     protected $fillable = [
-        'id', 'name', 'link', 'created_at',
+        'id', 'name', 'link', 'updated_at',
     ];
 
     /**
@@ -35,7 +35,7 @@ class Repo extends Model
      *
      * @return belongsTo
      */
-    public function owner(): belongsTo
+    public function owner()
     {
         return $this->belongsTo(Owner::class);
     }

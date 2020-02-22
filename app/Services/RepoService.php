@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\Exceptions\ErrorGetDataException;
 use App\Models\Repo;
 use App\Models\Owner;
 use GuzzleHttp\Client;
+use App\Exceptions\ErrorGetDataException;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class RepoService
 {
@@ -47,7 +48,7 @@ class RepoService
      *
      * @throws ErrorGetDataException
      */
-    public function getDataRepos()// разбить на методы и изменить названия методов
+    public function getDataRepos()
     {
         $response = $this->client->get(self::REPOS_URL);
 
@@ -55,7 +56,7 @@ class RepoService
             throw new ErrorGetDataException('Error getting data with code: ' . $response->getStatusCode());
         }
 
-        $this->storeDataRepos(json_decode($response->getBody()));
+        $this->storeRepos(json_decode($response->getBody()));
     }
 
     /**
@@ -63,7 +64,7 @@ class RepoService
      *
      * @param array $repos
      */
-    public function storeDataRepos(array $repos)
+    public function storeRepos(array $repos)
     {
         if (count($repos)) {
             foreach ($repos as $repo) {
@@ -74,16 +75,32 @@ class RepoService
                         'avatar' => $repo->owner->avatar_url,
                     ]);
 
-                $newRepo = $this->owner->find($repo->id)
+                $newRepo = $this->repo->find($repo->id)
                     ?: $this->repo->create([
                         'id' => $repo->id,
                         'name' => $repo->full_name,
                         'link' => $repo->html_url,
-                        'created_at' => $repo->created_at,
+                        'updated_at' => $repo->updated_at,
                     ]);
 
                 $newRepo->owner()->associate($newOwner)->save();
             }
         }
+    }
+
+    /**
+     * Get repos
+     *
+     * @return LengthAwarePaginator
+     */
+    public function getRepos(): LengthAwarePaginator
+    {
+        return $this->repo
+            ->with([
+                'owner' => function ($query) {
+                    $query->get('name', 'avatar');
+                }
+            ])
+            ->paginate(10);
     }
 }

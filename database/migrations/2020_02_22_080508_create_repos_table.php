@@ -17,7 +17,7 @@ class CreateReposTable extends Migration
             $table->bigInteger('id')->unique();
             $table->string('name');
             $table->string('link');
-            $table->dateTime('created_at', 0);
+            $table->dateTime('updated_at', 0);
             $table->bigInteger('owner_id')->unsigned()->index()->nullable();
             $table->foreign('owner_id')->references('id')->on('owners')->onDelete('cascade');
         });
